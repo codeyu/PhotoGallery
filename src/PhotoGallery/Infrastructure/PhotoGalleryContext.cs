@@ -18,8 +18,9 @@ namespace PhotoGallery.Infrastructure
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Error> Errors { get; set; }
 
-        public PhotoGalleryContext(DbContextOptions options) : base(options)
+        public PhotoGalleryContext(DbContextOptions<PhotoGalleryContext> options) : base(options)
         {
+            Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

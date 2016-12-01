@@ -5,19 +5,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
-
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 namespace PhotoGallery.Infrastructure
 {
     public static class DbInitializer
     {
         private static PhotoGalleryContext context;
-        public static void Initialize(IServiceProvider serviceProvider, string imagesPath)
+        public static void Initialize(IApplicationBuilder app, string imagesPath)
         {
-            context = (PhotoGalleryContext)serviceProvider.GetService(typeof(PhotoGalleryContext));
-
+            context = (PhotoGalleryContext)app.ApplicationServices.GetService(typeof(PhotoGalleryContext));
             InitializePhotoAlbums(imagesPath);
             InitializeUserRoles();
-
+            InitializeIdentity(app);
         }
 
         private static void InitializePhotoAlbums(string imagesPath)
@@ -116,6 +117,18 @@ namespace PhotoGallery.Infrastructure
                 }
             });
                 context.SaveChanges();
+            }
+        }
+
+        private static async void InitializeIdentity(IApplicationBuilder app)
+        {
+            UserManager<ApplicationUser> userManager = app.ApplicationServices
+                .GetRequiredService<UserManager<ApplicationUser>>();
+
+            ApplicationUser user = await userManager.FindByIdAsync("admin");
+            if (user == null) {
+                user = new ApplicationUser("admin");
+                await userManager.CreateAsync(user, "123abc");
             }
         }
     }

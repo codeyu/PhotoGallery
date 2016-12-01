@@ -19,7 +19,8 @@ using Microsoft.AspNetCore.StaticFiles;
 using System.IO;
 using Microsoft.Extensions.FileProviders;
 using Newtonsoft.Json.Serialization;
-
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using PhotoGallery.Entities;
 namespace PhotoGallery
 {
     public class Startup
@@ -62,11 +63,16 @@ namespace PhotoGallery
                         options.UseInMemoryDatabase();
                         break;
                     default:
-                        options.UseSqlServer(sqlConnectionString);
+                        options.UseSqlite(sqlConnectionString);
                     break;
                 }
             });
 
+            services.AddDbContext<AppIdentityDbContext>(options =>
+                options.UseSqlite(
+                    Configuration["Data:PhotoGalleryIdentity:ConnectionString"]));
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppIdentityDbContext>();
             // Repositories
             services.AddScoped<IPhotoRepository, PhotoRepository>();
             services.AddScoped<IAlbumRepository, AlbumRepository>();
@@ -133,7 +139,7 @@ namespace PhotoGallery
                 //routes.MapWebApiRoute("DefaultApi", "api/{controller}/{id?}");
             });
 
-            DbInitializer.Initialize(app.ApplicationServices, _applicationPath);
+            DbInitializer.Initialize(app, _applicationPath);
         }
 
         // Entry point for the application.
